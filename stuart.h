@@ -17,5 +17,7 @@ public:
 
     /* Function prototypes for main class*/
     static void begin(int timeFrame, int CLOCK, int DATA);
+    static void transmit(int message);
+    static int receive();
 };
 #endif

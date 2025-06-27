@@ -10,3 +10,11 @@ void stUART::begin(int timeFrame, int CLOCK, int DATA)
     CLOCK_PIN = CLOCK;
     DATA_PIN = DATA;
 }
+
+void stUART::transmit(int message)
+{
+}
+
+int stUART::receive()
+{
+}
