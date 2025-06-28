@@ -1,3 +1,4 @@
+#include "util.h"
 namespace stUTIL
 {
     /* Converts int to binary array for further processing */
