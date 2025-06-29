@@ -1,0 +1,60 @@
+int TIME_FRAME = 100;
+int CLOCK_PIN = 6;
+int DATA_PIN = 5;
+
+long BEGIN_TIME = 0;
+bool TIMER_STARTED = false;
+
+bool PREVIOUS_CLOCK_STATUS = false;
+int DATA_BITS_COUNTER = 0;
+bool READ_NEW_FRAME = false;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(CLOCK_PIN, INPUT);
+  pinMode(DATA_PIN, INPUT);
+}
+
+void loop() {
+  bool CLOCK_STATUS = digitalRead(CLOCK_PIN);
+
+  clockOnTimer(CLOCK_STATUS, PREVIOUS_CLOCK_STATUS);
+  if (READ_NEW_FRAME) dataBitsCounter(CLOCK_STATUS, PREVIOUS_CLOCK_STATUS);
+
+  PREVIOUS_CLOCK_STATUS = CLOCK_STATUS;
+}
+
+
+/**
+METHODS
+*/
+void clockOnTimer(bool CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS) {
+  /* TIMING CLOCK SIGNAL LENGTHS */
+  if (CLOCK_STATUS == PREVIOUS_CLOCK_STATUS == HIGH) {
+    /*TIMER START*/
+    if (!TIMER_STARTED) {
+      BEGIN_TIME = millis();
+      TIMER_STARTED = true;
+    }
+  } else {
+    /*TIMER RESET */
+    if (millis() - BEGIN_TIME > (TIME_FRAME * 4)) READ_NEW_FRAME = true;  // THIS MEANS THAT CALL SIGN IS DONE
+    TIMER_STARTED = false;                                                // RESET ANYWAYS
+  }
+}
+
+void dataBitsCounter(bool CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS) {
+  /*COUNTING DATA BITS */
+  if (PREVIOUS_CLOCK_STATUS == 0 && CLOCK_STATUS == 1) {
+    int DATA_BIT = digitalRead(DATA_PIN);
+
+    Serial.print(DATA_BIT);
+    DATA_BITS_COUNTER++;
+  }
+
+  if (DATA_BITS_COUNTER == 8) {
+    Serial.println("");
+    DATA_BITS_COUNTER = 0;
+    READ_NEW_FRAME = false;
+  }
+}
