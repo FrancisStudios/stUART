@@ -36,6 +36,7 @@ void stUART::transmit(int message)
 
     /** Starting transmission */
     pinMode(CLOCK_PIN, OUTPUT);
+    pinMode(DATA_PIN, OUTPUT);
     digitalWrite(CLOCK_PIN, HIGH);
     delay(5 * TIME_FRAME);
     digitalWrite(CLOCK_PIN, LOW);
@@ -50,8 +51,11 @@ void stUART::transmit(int message)
         digitalWrite(DATA_PIN, encodeBinaryArray[i]);
         delay(TIME_FRAME);
         digitalWrite(CLOCK_PIN, LOW);
+        digitalWrite(DATA_PIN, LOW);
         delay(TIME_FRAME);
     }
+
+    delay(TIME_FRAME);
 }
 
 int stUART::receive()

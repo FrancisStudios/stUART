@@ -1,0 +1,36 @@
+int TIME_FRAME = 100;
+int CLOCK_PIN = 6;
+int DATA_PIN = 5;
+
+bool readingDataFrame = false;
+bool callSignDetected = false;
+
+long timer = 0;
+bool timerStarted = false;
+
+bool PREVIOUS_CLOCK_STATUS = false;
+int DATA_BITS_COUNTER = 0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(CLOCK_PIN, INPUT);
+  pinMode(DATA_PIN, INPUT);
+}
+
+void loop() {
+  int CLOCK_STATUS = digitalRead(CLOCK_PIN);
+
+  if (PREVIOUS_CLOCK_STATUS == 0 && CLOCK_STATUS == 1) {
+
+    int DATA_BIT = digitalRead(DATA_PIN);
+    Serial.print(DATA_BIT);
+    DATA_BITS_COUNTER++;
+  }
+
+  if (DATA_BITS_COUNTER == 8) {
+    Serial.println("");
+    DATA_BITS_COUNTER = 0;
+  }
+
+  PREVIOUS_CLOCK_STATUS = CLOCK_STATUS;
+}
