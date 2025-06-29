@@ -8,10 +8,24 @@
 #include "stuart.h"
 #include "util.h"
 
+/* Variables for comm interface */
 int stUART::TIME_FRAME = 0;
 int stUART::CLOCK_PIN = 0;
 int stUART::DATA_PIN = 0;
 
+/* Variables for receive */
+long CLOCK_TIMER_BEGIN_TIMESTAMP = 0; // MILLIS()
+bool TIMER_STARTED = false;           // TIMESTAMP SET
+bool PREVIOUS_CLOCK_STATUS = false;   // HIGH / LOW
+int DATA_BITS_COUNTER = 0;            // COUNT 9 BITS
+bool READ_NEW_DATA_FRAME = false;     // IF CALLSIGN IS RECEIVED
+int DATA_FRAME_STORE[9];              // DATA FRAME BITS STORE
+bool DATA_FRAME_DONE = false;         // FLAG
+
+/* Variables to laugh at */
+bool DO_NOTHING = false; // JUST FOR FUNSIES XD
+
+/* EXPORTED STUART FNS */
 void stUART::begin(int timeFrame, int CLOCK, int DATA)
 {
     TIME_FRAME = timeFrame;
@@ -21,7 +35,7 @@ void stUART::begin(int timeFrame, int CLOCK, int DATA)
 
 void stUART::transmit(int message)
 {
-    int encodeBinaryArray[8];
+    int encodeBinaryArray[9];
 
     /** Input data validation and waiting for time to speak */
     if (CLOCK_PIN > 0 && DATA_PIN > 0 && TIME_FRAME > 0)
@@ -45,7 +59,7 @@ void stUART::transmit(int message)
     /** Transmission encoder */
     stUTIL::intToBinaryArray(message, encodeBinaryArray);
 
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < 9; ++i)
     {
         digitalWrite(CLOCK_PIN, HIGH);
         digitalWrite(DATA_PIN, encodeBinaryArray[i]);
@@ -58,6 +72,73 @@ void stUART::transmit(int message)
     delay(TIME_FRAME);
 }
 
-int stUART::receive()
+int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
 {
+    pinMode(CLOCK_PIN, INPUT);
+    pinMode(DATA_PIN, INPUT);
+
+    /* Main receive loop stage */
+    bool CURRENT_CLOCK_STATUS = digitalRead(CLOCK_PIN);
+
+    clockOnTimer(CURRENT_CLOCK_STATUS, PREVIOUS_CLOCK_STATUS);
+    if (READ_NEW_DATA_FRAME)
+        dataBitsCounter(CURRENT_CLOCK_STATUS, PREVIOUS_CLOCK_STATUS);
+
+    if (DATA_FRAME_DONE)
+    {
+        DATA_FRAME = DATA_FRAME_STORE;
+        DATA_FRAME_DONE_SIGNAL = DATA_FRAME_DONE;
+        return DATA_FRAME_STORE;
+    }
+
+    PREVIOUS_CLOCK_STATUS = CURRENT_CLOCK_STATUS;
+}
+
+void stUART::clockOnTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS)
+{
+    /* Timing clock signal lengths */
+    if (CURRENT_CLOCK_STATUS == PREVIOUS_CLOCK_STATUS == HIGH)
+    {
+        /* Starting timer */
+        if (!TIMER_STARTED)
+        {
+            CLOCK_TIMER_BEGIN_TIMESTAMP = millis();
+            TIMER_STARTED = true;
+        }
+    }
+    else
+    {
+        /* Resetting timer */
+        if (millis() - CLOCK_TIMER_BEGIN_TIMESTAMP > (stUART::TIME_FRAME * 4)) // THIS MEANS THAT CALL SIGN IS DONE
+        {
+            READ_NEW_DATA_FRAME = true;
+            Serial.println("New dataframe incoming");
+        }
+
+        TIMER_STARTED = false; // RESET ANYWAYS
+    }
+}
+
+void stUART::dataBitsCounter(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS)
+{
+    if (PREVIOUS_CLOCK_STATUS == 0 && CURRENT_CLOCK_STATUS == 1) // IF SQA. WAVE LEADING EDGE STARTS
+    {
+        int DATA_BIT = digitalRead(DATA_PIN);
+        DATA_FRAME_STORE[DATA_BITS_COUNTER] = DATA_BIT;
+        DATA_FRAME_DONE = false;
+        DATA_BITS_COUNTER++;
+    }
+
+    if (DATA_BITS_COUNTER == 9)
+    {
+        DATA_FRAME_DONE = true;      // PACK UP SIGNAL
+        DATA_BITS_COUNTER = 0;       // RESET
+        READ_NEW_DATA_FRAME = false; // CLOSE READ
+
+        for (int i = 0; i < 9; i++)
+        {
+            Serial.print(DATA_FRAME_STORE[i]);
+        }
+        Serial.println("");
+    }
 }

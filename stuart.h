@@ -25,6 +25,10 @@ public:
     /* Function prototypes for main class*/
     static void begin(int timeFrame, int CLOCK, int DATA);
     static void transmit(int message);
-    static int receive();
+    static int receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL);
+
+private:
+    static void clockOnTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS);
+    static void dataBitsCounter(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS);
 };
 #endif
