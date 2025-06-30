@@ -17,13 +17,12 @@ int stUART::DATA_PIN = 0;
 long CLOCK_TIMER_BEGIN_TIMESTAMP = 0; // MILLIS()
 bool TIMER_STARTED = false;           // TIMESTAMP SET
 bool PREVIOUS_CLOCK_STATUS = false;   // HIGH / LOW
-int DATA_BITS_COUNTER = 0;            // COUNT 9 BITS
+int DATA_BITS_COUNTER = 0;            // COUNT 8 BITS
 bool READ_NEW_DATA_FRAME = false;     // IF CALLSIGN IS RECEIVED
-int DATA_FRAME_STORE[9];              // DATA FRAME BITS STORE
+int DATA_FRAME_STORE[8];              // DATA FRAME BITS STORE
 bool DATA_FRAME_DONE = false;         // FLAG
 
-/* Variables to laugh at */
-bool DO_NOTHING = false; // JUST FOR FUNSIES XD
+bool TEST_ENVIRONMENT = true;
 
 /* EXPORTED STUART FNS */
 void stUART::begin(int timeFrame, int CLOCK, int DATA)
@@ -35,7 +34,7 @@ void stUART::begin(int timeFrame, int CLOCK, int DATA)
 
 void stUART::transmit(int message)
 {
-    int encodeBinaryArray[9];
+    int encodeBinaryArray[8];
 
     /** Input data validation and waiting for time to speak */
     if (CLOCK_PIN > 0 && DATA_PIN > 0 && TIME_FRAME > 0)
@@ -59,7 +58,7 @@ void stUART::transmit(int message)
     /** Transmission encoder */
     stUTIL::intToBinaryArray(message, encodeBinaryArray);
 
-    for (int i = 0; i < 9; ++i)
+    for (int i = 0; i < 8; ++i)
     {
         digitalWrite(CLOCK_PIN, HIGH);
         digitalWrite(DATA_PIN, encodeBinaryArray[i]);
@@ -112,7 +111,8 @@ void stUART::clockOnTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS)
         if (millis() - CLOCK_TIMER_BEGIN_TIMESTAMP > (stUART::TIME_FRAME * 4)) // THIS MEANS THAT CALL SIGN IS DONE
         {
             READ_NEW_DATA_FRAME = true;
-            Serial.println("New dataframe incoming");
+            if (TEST_ENVIRONMENT)
+                Serial.println("<NewDataFrame/>");
         }
 
         TIMER_STARTED = false; // RESET ANYWAYS
@@ -121,24 +121,36 @@ void stUART::clockOnTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS)
 
 void stUART::dataBitsCounter(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS)
 {
+
     if (PREVIOUS_CLOCK_STATUS == 0 && CURRENT_CLOCK_STATUS == 1) // IF SQA. WAVE LEADING EDGE STARTS
     {
+        DATA_FRAME_DONE = false;
         int DATA_BIT = digitalRead(DATA_PIN);
         DATA_FRAME_STORE[DATA_BITS_COUNTER] = DATA_BIT;
-        DATA_FRAME_DONE = false;
         DATA_BITS_COUNTER++;
     }
 
-    if (DATA_BITS_COUNTER == 9)
+    if (DATA_BITS_COUNTER == 8)
     {
         DATA_FRAME_DONE = true;      // PACK UP SIGNAL
         DATA_BITS_COUNTER = 0;       // RESET
         READ_NEW_DATA_FRAME = false; // CLOSE READ
 
-        for (int i = 0; i < 9; i++)
+        if (TEST_ENVIRONMENT)
         {
-            Serial.print(DATA_FRAME_STORE[i]);
+            for (int i = 0; i < 8; i++)
+            {
+                Serial.print(DATA_FRAME_STORE[i]);
+            }
+            Serial.println("");
         }
-        Serial.println("");
     }
 }
+
+/**
+ * 
+ * THERE IS STILL SOME ISSUE WITH THIS.
+ * FOR THE FIRST RECEIVED MESSAGE IT WORKS PERFECTLY
+ * EVERYONE AFTER THAT IS SHIFTED RIGHT, FOR SOME REASON
+ * IT PUTS A ZERO AT THE MSB
+ */
