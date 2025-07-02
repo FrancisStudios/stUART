@@ -73,8 +73,7 @@ void stUART::transmit(int message)
 
 int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
 {
-    pinMode(CLOCK_PIN, INPUT);
-    pinMode(DATA_PIN, INPUT);
+    setInputPins();
 
     /* Main receive loop stage */
     bool CURRENT_CLOCK_STATUS = digitalRead(CLOCK_PIN);
@@ -147,14 +146,8 @@ void stUART::dataBitsCounter(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STAT
     }
 }
 
-/**
- *
- * THERE IS STILL SOME ISSUE WITH THIS.
- * FOR THE FIRST RECEIVED MESSAGE IT WORKS PERFECTLY
- * EVERYONE AFTER THAT IS SHIFTED RIGHT, FOR SOME REASON
- * IT PUTS A ZERO AT THE MSB
- */
-
- /*
- ZERO SHIFT STRUGGLE IS STILL GOING ON
-  */
+void stUART::setInputPins()
+{
+    pinMode(CLOCK_PIN, INPUT);
+    pinMode(DATA_PIN, INPUT);
+}

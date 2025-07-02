@@ -30,5 +30,6 @@ public:
 private:
     static void clockOnTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS);
     static void dataBitsCounter(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS);
+    static void setInputPins();
 };
 #endif
