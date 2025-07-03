@@ -16,7 +16,6 @@ int stUART::DATA_PIN = 0;
 /* Variables for receive */
 long CLOCK_TIMER_BEGIN_TIMESTAMP = 0; // MILLIS()
 bool TIMER_STARTED = false;           // TIMESTAMP SET
-bool PREVIOUS_CLOCK_STATUS = false;   // HIGH / LOW
 int DATA_BITS_COUNTER = 0;            // COUNT 8 BITS
 bool READ_NEW_DATA_FRAME = false;     // IF CALLSIGN IS RECEIVED
 int DATA_FRAME_STORE[8];              // DATA FRAME BITS STORE
@@ -31,6 +30,11 @@ void stUART::begin(int timeFrame, int CLOCK, int DATA)
     CLOCK_PIN = CLOCK;
     DATA_PIN = DATA;
 }
+
+/* New Variables For Receive */
+bool CURRENT_CLOCK_STATE = false;
+bool PREVIOUS_CLOCK_STATE = false;
+
 
 void stUART::transmit(int message)
 {
@@ -76,11 +80,11 @@ int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
     setInputPins();
 
     /* Main receive loop stage */
-    bool CURRENT_CLOCK_STATUS = digitalRead(CLOCK_PIN);
+    CURRENT_CLOCK_STATE = digitalRead(CLOCK_PIN);
 
-    clockOnTimer(CURRENT_CLOCK_STATUS, PREVIOUS_CLOCK_STATUS);
+    clockOnTimer(CURRENT_CLOCK_STATE, PREVIOUS_CLOCK_STATE);
     if (READ_NEW_DATA_FRAME)
-        dataBitsCounter(CURRENT_CLOCK_STATUS, PREVIOUS_CLOCK_STATUS);
+        dataBitsCounter(CURRENT_CLOCK_STATE, PREVIOUS_CLOCK_STATE);
 
     if (DATA_FRAME_DONE)
     {
@@ -89,7 +93,11 @@ int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
         return DATA_FRAME_STORE;
     }
 
-    PREVIOUS_CLOCK_STATUS = CURRENT_CLOCK_STATUS;
+    PREVIOUS_CLOCK_STATE = CURRENT_CLOCK_STATE;
+}
+
+long stUART::clockPulseTimer()
+{
 }
 
 void stUART::clockOnTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS)

@@ -28,8 +28,9 @@ public:
     static int receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL);
 
 private:
-    static void clockOnTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS);
-    static void dataBitsCounter(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS);
+    static void clockOnTimer(bool CURRENT_CLOCK_STATE, bool PREVIOUS_CLOCK_STATE);
+    static long clockPulseTimer();
+    static void dataBitsCounter(bool CURRENT_CLOCK_STATE, bool PREVIOUS_CLOCK_STATE);
     static void setInputPins();
 };
 #endif
