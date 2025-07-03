@@ -159,3 +159,11 @@ void stUART::setInputPins()
     pinMode(CLOCK_PIN, INPUT);
     pinMode(DATA_PIN, INPUT);
 }
+
+/*
+ÚÚÚÚÚ Szerintem megvan az issue: 
+Az a gond, hogy az utolsó digit (LSB) órajelét is beleszámolja
+a következő callsignba, ezért kezdünk egyel korábban mert a kollszájn
+hamarabb elpukkan, mint azt szeretnénk. Bár jó kérdés, hogy az 
+arduino sketchben miért működik megfelelően. -needs investigation-
+*/
