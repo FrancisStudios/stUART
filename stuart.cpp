@@ -23,6 +23,14 @@ bool DATA_FRAME_DONE = false;         // FLAG
 
 bool TEST_ENVIRONMENT = true;
 
+struct CLOCK_STATE_S
+{
+    bool CURRENT;
+    bool PREVIOUS;
+};
+
+CLOCK_STATE_S CLOCK_STATE;
+
 /* EXPORTED STUART FNS */
 void stUART::begin(int timeFrame, int CLOCK, int DATA)
 {
@@ -30,11 +38,6 @@ void stUART::begin(int timeFrame, int CLOCK, int DATA)
     CLOCK_PIN = CLOCK;
     DATA_PIN = DATA;
 }
-
-/* New Variables For Receive */
-bool CURRENT_CLOCK_STATE = false;
-bool PREVIOUS_CLOCK_STATE = false;
-
 
 void stUART::transmit(int message)
 {
@@ -80,11 +83,11 @@ int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
     setInputPins();
 
     /* Main receive loop stage */
-    CURRENT_CLOCK_STATE = digitalRead(CLOCK_PIN);
+    CLOCK_STATE.CURRENT = digitalRead(CLOCK_PIN);
 
-    clockOnTimer(CURRENT_CLOCK_STATE, PREVIOUS_CLOCK_STATE);
+    clockOnTimer(CLOCK_STATE.CURRENT, CLOCK_STATE.PREVIOUS);
     if (READ_NEW_DATA_FRAME)
-        dataBitsCounter(CURRENT_CLOCK_STATE, PREVIOUS_CLOCK_STATE);
+        dataBitsCounter(CLOCK_STATE.CURRENT, CLOCK_STATE.PREVIOUS);
 
     if (DATA_FRAME_DONE)
     {
@@ -93,7 +96,7 @@ int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
         return DATA_FRAME_STORE;
     }
 
-    PREVIOUS_CLOCK_STATE = CURRENT_CLOCK_STATE;
+    CLOCK_STATE.PREVIOUS = CLOCK_STATE.CURRENT;
 }
 
 long stUART::clockPulseTimer()
@@ -161,9 +164,9 @@ void stUART::setInputPins()
 }
 
 /*
-ÚÚÚÚÚ Szerintem megvan az issue: 
+ÚÚÚÚÚ Szerintem megvan az issue:
 Az a gond, hogy az utolsó digit (LSB) órajelét is beleszámolja
 a következő callsignba, ezért kezdünk egyel korábban mert a kollszájn
-hamarabb elpukkan, mint azt szeretnénk. Bár jó kérdés, hogy az 
+hamarabb elpukkan, mint azt szeretnénk. Bár jó kérdés, hogy az
 arduino sketchben miért működik megfelelően. -needs investigation-
 */
