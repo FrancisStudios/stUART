@@ -210,3 +210,10 @@ a következő callsignba, ezért kezdünk egyel korábban mert a kollszájn
 hamarabb elpukkan, mint azt szeretnénk. Bár jó kérdés, hogy az
 arduino sketchben miért működik megfelelően. -needs investigation-
 */
+
+/**
+ * ŰŰŰ
+ * Egy másik ötlet, hey talán az a gond, hogy nem foglalkozok a 
+ * négy pulzus után lévő szünettel - detektálni kéne a low pulzust
+ * mert szerintem az miatt csúszik el
+ */
