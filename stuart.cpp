@@ -14,10 +14,9 @@ int stUART::CLOCK_PIN = 0;
 int stUART::DATA_PIN = 0;
 
 /* Variables for receive */
-int DATA_BITS_COUNTER = 0;            // COUNT 8 BITS
-bool READ_NEW_DATA_FRAME = false;     // IF CALLSIGN IS RECEIVED
-int DATA_FRAME_STORE[8];              // DATA FRAME BITS STORE
-bool DATA_FRAME_DONE = false;         // FLAG
+int DATA_BITS_COUNTER = 0;        // COUNT 8 BITS
+int DATA_FRAME_STORE[8];          // DATA FRAME BITS STORE
+bool DATA_FRAME_DONE = false;     // FLAG
 
 bool TEST_ENVIRONMENT = true;
 
@@ -38,6 +37,16 @@ struct TIMER_S
 };
 
 TIMER_S TIMER;
+
+/* Call Sign Register */
+
+struct CALL_SIGN_S
+{
+    bool IS_CALLED; // LONG HIGH PERIOD REACHED TRESHOLD
+    bool IS_REGISTERED; // IS PULLED LOW AFTER TRESHOLD -> DATA STREAM CAN BEGIN
+};
+
+CALL_SIGN_S CALL_SIGN;
 
 /* EXPORTED STUART FNS */
 void stUART::begin(int timeFrame, int CLOCK, int DATA)
@@ -95,7 +104,7 @@ int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
 
     clockSignalTimer(CLOCK_STATE.CURRENT, CLOCK_STATE.PREVIOUS);
 
-    if (READ_NEW_DATA_FRAME)
+    if (CALL_SIGN.IS_CALLED)
         dataBitsCounter(CLOCK_STATE.CURRENT, CLOCK_STATE.PREVIOUS);
 
     if (DATA_FRAME_DONE)
@@ -110,9 +119,28 @@ int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
 
 long stUART::clockPulseTimer()
 {
+    long PULSE_TIME = millis() - TIMER.START;
+
     if (CLOCK_STATE.CURRENT == CLOCK_STATE.PREVIOUS == HIGH)
     {
+        if (!TIMER.IS_STARTED)
+        {
+            TIMER.START = millis();
+            TIMER.IS_STARTED = true;
+        }
     }
+    else
+    {
+        if (PULSE_TIME > (stUART::TIME_FRAME * 4))
+        {
+            CALL_SIGN.IS_REGISTERED = true;
+            if (TEST_ENVIRONMENT)
+                Serial.println("<NewDataFrame/>");
+        }
+        TIMER.IS_STARTED = false;
+    }
+
+    return PULSE_TIME;
 }
 
 void stUART::clockSignalTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS)
@@ -132,7 +160,7 @@ void stUART::clockSignalTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STA
         /* Resetting timer */
         if (millis() - TIMER.START > (stUART::TIME_FRAME * 4))
         {
-            READ_NEW_DATA_FRAME = true;
+            CALL_SIGN.IS_CALLED = true;
             if (TEST_ENVIRONMENT)
                 Serial.println("<NewDataFrame/>");
         }
@@ -156,7 +184,7 @@ void stUART::dataBitsCounter(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STAT
     {
         DATA_FRAME_DONE = true;      // PACK UP SIGNAL
         DATA_BITS_COUNTER = 0;       // RESET
-        READ_NEW_DATA_FRAME = false; // CLOSE READ
+        CALL_SIGN.IS_CALLED = false; // CLOSE READ
 
         if (TEST_ENVIRONMENT)
         {
