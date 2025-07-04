@@ -8,19 +8,12 @@
 #include "stuart.h"
 #include "util.h"
 
-/* Variables for comm interface */
 int stUART::TIME_FRAME = 0;
 int stUART::CLOCK_PIN = 0;
 int stUART::DATA_PIN = 0;
 
-/* Variables for receive */
-int DATA_BITS_COUNTER = 0;    // COUNT 8 BITS
-int DATA_FRAME_STORE[8];      // DATA FRAME BITS STORE
-bool DATA_FRAME_DONE = false; // FLAG
-
 bool TEST_ENVIRONMENT = true;
 
-/* Store Current and Previous Clock Signals */
 struct CLOCK_STATE_S
 {
     bool CURRENT;
@@ -29,16 +22,13 @@ struct CLOCK_STATE_S
 
 CLOCK_STATE_S CLOCK_STATE;
 
-/* Clock Pulse Timer */
 struct TIMER_S
 {
-    long START;
+    long START; // TIMER USED FOR TIMING CLOCK
     bool IS_STARTED;
 };
 
 TIMER_S TIMER;
-
-/* Call Sign Register */
 
 struct CALL_SIGN_S
 {
@@ -47,6 +37,15 @@ struct CALL_SIGN_S
 };
 
 CALL_SIGN_S CALL_SIGN;
+
+struct DATA_S
+{
+    int COUNTER;
+    int STORE[8];
+    bool DONE;
+};
+
+DATA_S DATA_FRAME;
 
 /* EXPORTED STUART FNS */
 void stUART::begin(int timeFrame, int CLOCK, int DATA)
@@ -95,7 +94,7 @@ void stUART::transmit(int message)
     delay(TIME_FRAME);
 }
 
-int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
+int stUART::receive()
 {
     setInputPins();
 
@@ -151,23 +150,23 @@ void stUART::dataBitsCounter()
 
     if (isRisingEdgeClock())
     {
-        DATA_FRAME_DONE = false;
+        DATA_FRAME.DONE = false;
         int DATA_BIT = digitalRead(DATA_PIN);
-        DATA_FRAME_STORE[DATA_BITS_COUNTER] = DATA_BIT;
-        DATA_BITS_COUNTER++;
+        DATA_FRAME.STORE[DATA_FRAME.COUNTER] = DATA_BIT;
+        DATA_FRAME.COUNTER++;
     }
 
-    if (DATA_BITS_COUNTER == 8)
+    if (DATA_FRAME.COUNTER == 8)
     {
-        DATA_FRAME_DONE = true;      // PACK UP SIGNAL
-        DATA_BITS_COUNTER = 0;       // RESET
+        DATA_FRAME.DONE = true;          // PACK UP SIGNAL
+        DATA_FRAME.COUNTER = 0;          // RESET
         CALL_SIGN.IS_REGISTERED = false; // CLOSE READ
 
         if (TEST_ENVIRONMENT)
         {
             for (int i = 0; i < 8; i++)
             {
-                Serial.print(DATA_FRAME_STORE[i]);
+                Serial.print(DATA_FRAME.STORE[i]);
             }
             Serial.println("");
         }

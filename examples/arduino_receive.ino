@@ -1,5 +1,4 @@
 #include <stuart.h>
-int DATA_FRAME, DATA_FRAME_DONE_SIGNAL;
 
 void setup() {
   Serial.begin(9600);
@@ -7,5 +6,5 @@ void setup() {
 }
 
 void loop() {
-  stUART::receive(DATA_FRAME, DATA_FRAME_DONE_SIGNAL);
+  stUART::receive();
 }

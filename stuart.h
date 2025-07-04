@@ -25,10 +25,9 @@ public:
     /* Function prototypes for main class*/
     static void begin(int timeFrame, int CLOCK, int DATA);
     static void transmit(int message);
-    static int receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL);
+    static int receive();
 
 private:
-    static void clockSignalTimer(bool CURRENT_CLOCK_STATE, bool PREVIOUS_CLOCK_STATE);
     static long clockPulseTimer();
     static bool isRisingEdgeClock();
     static bool isTrailingEdgeClock();
