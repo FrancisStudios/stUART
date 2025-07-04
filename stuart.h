@@ -30,7 +30,10 @@ public:
 private:
     static void clockSignalTimer(bool CURRENT_CLOCK_STATE, bool PREVIOUS_CLOCK_STATE);
     static long clockPulseTimer();
-    static void dataBitsCounter(bool CURRENT_CLOCK_STATE, bool PREVIOUS_CLOCK_STATE);
+    static bool isRisingEdgeClock();
+    static bool isTrailingEdgeClock();
+    static void callSignDetector();
+    static void dataBitsCounter();
     static void setInputPins();
 };
 #endif

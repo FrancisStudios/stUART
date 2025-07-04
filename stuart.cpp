@@ -14,9 +14,9 @@ int stUART::CLOCK_PIN = 0;
 int stUART::DATA_PIN = 0;
 
 /* Variables for receive */
-int DATA_BITS_COUNTER = 0;        // COUNT 8 BITS
-int DATA_FRAME_STORE[8];          // DATA FRAME BITS STORE
-bool DATA_FRAME_DONE = false;     // FLAG
+int DATA_BITS_COUNTER = 0;    // COUNT 8 BITS
+int DATA_FRAME_STORE[8];      // DATA FRAME BITS STORE
+bool DATA_FRAME_DONE = false; // FLAG
 
 bool TEST_ENVIRONMENT = true;
 
@@ -42,7 +42,7 @@ TIMER_S TIMER;
 
 struct CALL_SIGN_S
 {
-    bool IS_CALLED; // LONG HIGH PERIOD REACHED TRESHOLD
+    bool IS_CALLED;     // LONG HIGH PERIOD REACHED TRESHOLD
     bool IS_REGISTERED; // IS PULLED LOW AFTER TRESHOLD -> DATA STREAM CAN BEGIN
 };
 
@@ -102,17 +102,11 @@ int stUART::receive(int DATA_FRAME, bool DATA_FRAME_DONE_SIGNAL)
     /* Main receive loop stage */
     CLOCK_STATE.CURRENT = digitalRead(CLOCK_PIN);
 
-    clockSignalTimer(CLOCK_STATE.CURRENT, CLOCK_STATE.PREVIOUS);
+    clockPulseTimer();
+    callSignDetector();
 
-    if (CALL_SIGN.IS_CALLED)
-        dataBitsCounter(CLOCK_STATE.CURRENT, CLOCK_STATE.PREVIOUS);
-
-    if (DATA_FRAME_DONE)
-    {
-        DATA_FRAME = DATA_FRAME_STORE;
-        DATA_FRAME_DONE_SIGNAL = DATA_FRAME_DONE;
-        return DATA_FRAME_STORE;
-    }
+    if (CALL_SIGN.IS_REGISTERED)
+        dataBitsCounter();
 
     CLOCK_STATE.PREVIOUS = CLOCK_STATE.CURRENT;
 }
@@ -132,47 +126,30 @@ long stUART::clockPulseTimer()
     else
     {
         if (PULSE_TIME > (stUART::TIME_FRAME * 4))
-        {
-            CALL_SIGN.IS_REGISTERED = true;
-            if (TEST_ENVIRONMENT)
-                Serial.println("<NewDataFrame/>");
-        }
+            CALL_SIGN.IS_CALLED = true;
+
         TIMER.IS_STARTED = false;
     }
 
     return PULSE_TIME;
 }
 
-void stUART::clockSignalTimer(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS)
+void stUART::callSignDetector()
 {
-    /* Timing clock signal lengths */
-    if (CLOCK_STATE.CURRENT == CLOCK_STATE.PREVIOUS == HIGH)
+    if (CALL_SIGN.IS_CALLED && isTrailingEdgeClock())
     {
-        /* Starting timer */
-        if (!TIMER.IS_STARTED)
-        {
-            TIMER.START = millis();
-            TIMER.IS_STARTED = true;
-        }
-    }
-    else
-    {
-        /* Resetting timer */
-        if (millis() - TIMER.START > (stUART::TIME_FRAME * 4))
-        {
-            CALL_SIGN.IS_CALLED = true;
-            if (TEST_ENVIRONMENT)
-                Serial.println("<NewDataFrame/>");
-        }
+        CALL_SIGN.IS_REGISTERED = true;
+        CALL_SIGN.IS_CALLED = false;
 
-        TIMER.IS_STARTED = false;
+        if (TEST_ENVIRONMENT)
+            Serial.println("<NewDataFrame/>");
     }
 }
 
-void stUART::dataBitsCounter(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STATUS)
+void stUART::dataBitsCounter()
 {
 
-    if (PREVIOUS_CLOCK_STATUS == 0 && CURRENT_CLOCK_STATUS == 1) // IF SQA. WAVE LEADING EDGE STARTS
+    if (isRisingEdgeClock())
     {
         DATA_FRAME_DONE = false;
         int DATA_BIT = digitalRead(DATA_PIN);
@@ -184,7 +161,7 @@ void stUART::dataBitsCounter(bool CURRENT_CLOCK_STATUS, bool PREVIOUS_CLOCK_STAT
     {
         DATA_FRAME_DONE = true;      // PACK UP SIGNAL
         DATA_BITS_COUNTER = 0;       // RESET
-        CALL_SIGN.IS_CALLED = false; // CLOSE READ
+        CALL_SIGN.IS_REGISTERED = false; // CLOSE READ
 
         if (TEST_ENVIRONMENT)
         {
@@ -203,17 +180,12 @@ void stUART::setInputPins()
     pinMode(DATA_PIN, INPUT);
 }
 
-/*
-ÚÚÚÚÚ Szerintem megvan az issue:
-Az a gond, hogy az utolsó digit (LSB) órajelét is beleszámolja
-a következő callsignba, ezért kezdünk egyel korábban mert a kollszájn
-hamarabb elpukkan, mint azt szeretnénk. Bár jó kérdés, hogy az
-arduino sketchben miért működik megfelelően. -needs investigation-
-*/
+bool stUART::isTrailingEdgeClock()
+{
+    return CLOCK_STATE.PREVIOUS == HIGH && CLOCK_STATE.CURRENT == LOW;
+}
 
-/**
- * ŰŰŰ
- * Egy másik ötlet, hey talán az a gond, hogy nem foglalkozok a 
- * négy pulzus után lévő szünettel - detektálni kéne a low pulzust
- * mert szerintem az miatt csúszik el
- */
+bool stUART::isRisingEdgeClock()
+{
+    return CLOCK_STATE.PREVIOUS == LOW && CLOCK_STATE.CURRENT == HIGH;
+}
