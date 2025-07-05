@@ -96,7 +96,7 @@ void stUART::transmit(int message)
 
 int stUART::receive()
 {
-    setInputPins();
+    stUTIL::setInputPins(stUART::CLOCK_PIN, stUART::DATA_PIN);
 
     /* Main receive loop stage */
     CLOCK_STATE.CURRENT = digitalRead(CLOCK_PIN);
@@ -171,12 +171,6 @@ void stUART::dataBitsCounter()
             Serial.println("");
         }
     }
-}
-
-void stUART::setInputPins()
-{
-    pinMode(CLOCK_PIN, INPUT);
-    pinMode(DATA_PIN, INPUT);
 }
 
 bool stUART::isTrailingEdgeClock()

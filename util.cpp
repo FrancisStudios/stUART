@@ -17,4 +17,10 @@ namespace stUTIL
             binaryArray[7 - i] = bit;
         }
     }
+
+    void setInputPins(int CLOCK_PIN, int DATA_PIN)
+    {
+        pinMode(CLOCK_PIN, INPUT);
+        pinMode(DATA_PIN, INPUT);
+    }
 }

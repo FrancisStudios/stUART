@@ -9,8 +9,11 @@
 
 #pragma once
 
+#include <Arduino.h>
+
 namespace stUTIL
 {
     void intToBinaryArray(int number, int binaryArray[8]);
+    void setInputPins(int CLOCK_PIN, int DATA_PIN);
 }
 #endif
