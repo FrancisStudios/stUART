@@ -18,6 +18,16 @@ namespace stUTIL
         }
     }
 
+    int binaryArrayToInt(int binaryArray[8])
+    {
+        int number = 0;
+        for (int i = 0; i < 8; ++i)
+        {
+            number = (number << 1) | (binaryArray[i] & 1);
+        }
+        return number;
+    }
+
     void setInputPins(int CLOCK_PIN, int DATA_PIN)
     {
         pinMode(CLOCK_PIN, INPUT);
