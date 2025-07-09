@@ -6,5 +6,6 @@ void setup() {
 }
 
 void loop() {
-  stUART::receive();
+  int result = stUART::receive();
+  if (result < 0xFF) Serial.println(result);
 }

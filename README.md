@@ -12,34 +12,64 @@ This repository **contains the C/C++ library** implementation for microcontrolle
 
 It starts with Arduino. Currently only arduino environment is supported by this library. In the future I plan to extend this for other MCUs and maybe FPGAs. 
 
-1. Clone this repo to your system
-2. Copy the repository to ``Documents/Arduino/libraries`` folder (or wherever you installed your Arduino IDE)
+1. Clone this repo to your system (see clone option up above)
+2. Copy the repository to ``Documents/Arduino/libraries/`` folder (or wherever you installed your Arduino IDE)
 3. Include it in your project ``#include <stuart.h>``
+4. Connect two uController devices together (currenly Arduino is supported) [Select two GPIO pins for CLOCK and DATA]
+5. Check the example files below
+6. Upload transmit and receive onto different devices
+7. Have fun :) 
 
 ## 🔌 API reference
 
 ### 1) 🏁 .begin()
 ```cpp
-stUART::begin(int timeFrame, int CLOCK, int DATA);
+void stUART::begin(int timeFrame, int CLOCK, int DATA);
 ```
 
 This function must be used in the ``setup()`` section of your code. This should only be called once and accepts the timeFrame (milliseconds) and the CLOCK pin number and DATA pin number. 
 
 ### 2) 📡 .transmit()
 ```cpp
-stUART::transmit(int message);
+void stUART::transmit(int message);
 ```
 
-With this method you can transmit any number that can fit in an 8 bit frame - for larger numbers my suggestion is to break it up to digits and transmit in a digit based, or two-three-four digit based system - whatever fits your needs. 
+With this method you can transmit any number that can fit in an 8 bit frame (from **0x00 to 0xFF** a.k.a. 0-256 in decimal)- for larger numbers my suggestion is to break it up to digits and transmit in a digit based, or two digit based system - whatever fits your needs. 
 
 Example file: [📁 arduino_send.ino](/examples/arduino_send.ino)
 
 ### 2) 📶 .receive()
 ```cpp
-stUART::receive();
+int stUART::receive();
 ```
 
-This method returns a number that was transmitted in the 8bit frame. ``STILL WORK IN PROGRESS`` 
+This method returns an ``integer`` number transmitted via the 8bit frame.
+
+The largest number you can fit in the 8bit frame is ``0b11111111`` which equals to 255 decimal (this shouldn't surprise you, basic computing knowledge) so **this function returns 256** in any case where the frame is not ready yet. So you can check your transmission package state like so:
+
+```CPP
+void loop() {
+  int result = stUART::receive();
+  if (result < 0xFF) Serial.println(result); //check if frame is ready
+}
+```
+
+here is a recieve example:
+```CPP
+#include <stuart.h>
+
+void setup() {
+  Serial.begin(9600);
+  stUART::begin(100, 6, 5);
+}
+
+void loop() {
+  int result = stUART::receive();
+  if (result < 0xFF) Serial.println(result);
+}
+
+```
+and the example file below:
 
 Example file: [📁 arduino_receive.ino](/examples/arduino_receive.ino)
 
