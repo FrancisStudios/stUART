@@ -36,7 +36,34 @@ bool stUART::transmit(int message);
 
 With this method you can transmit any number that can fit in an 8 bit frame (from **0x00 to 0xFF** a.k.a. 0-256 in decimal)- for larger numbers my suggestion is to break it up to digits and transmit in a digit based, or two digit based system - whatever fits your needs. 
 
-This function returns a **boolean** depending on if the transmission procedure is ready to start.
+This function returns a **boolean** depending on if the transmission procedure is ready to start. Here is an example:
+
+```CPP
+if (stUART::transmit())
+      stUART::transmit(message[i]);
+```
+If transmit returns with true, you can start transmitting your message
+
+Here is the full transmit example:
+_Let's imagine, that you want to transmit the large number of 1234 (decimal) over this protocol. First you have to splice it up to singe (or double) digits and create a list or array of it and transmit those single/double digits like shown_
+
+```CPP
+#include <stuart.h>
+
+void setup() {
+  stUART::begin(100, 6, 5);
+}
+
+void loop() {
+  int message[4] = { 1, 2, 3, 4 };
+
+  for (int i = 0; i < 4; i++) {
+    if (stUART::transmit())
+      stUART::transmit(message[i]);
+  }
+}
+
+```
 
 Example file: [📁 arduino_send.ino](/examples/arduino_send.ino)
 
