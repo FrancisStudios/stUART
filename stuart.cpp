@@ -67,6 +67,7 @@ void stUART::begin(int timeFrame, int CLOCK, int DATA)
 
 bool stUART::transmit(int message)
 {
+    /* Actual Transmission Below */
     if (stUTIL::isMessageWithinLimit(message, _LIMIT_VALUE) && TRANSMIT.READY)
     {
         int encodeBinaryArray[8];
@@ -83,16 +84,9 @@ bool stUART::transmit(int message)
         }
 
         /** Starting transmission */
-
         TRANSMIT.READY = false;
 
-        /* Callsign */
-        pinMode(CLOCK_PIN, OUTPUT);
-        pinMode(DATA_PIN, OUTPUT);
-        digitalWrite(CLOCK_PIN, HIGH);
-        delay(5 * TIME_FRAME);
-        digitalWrite(CLOCK_PIN, LOW);
-        delay(TIME_FRAME);
+        stUTIL::sendCallSign(CLOCK_PIN, DATA_PIN, TIME_FRAME);
 
         /** Transmission encoder */
         stUTIL::intToBinaryArray(message, encodeBinaryArray);

@@ -17,5 +17,6 @@ namespace stUTIL
     void setInputPins(int CLOCK_PIN, int DATA_PIN);
     int binaryArrayToInt(int binaryArray[8]);
     bool isMessageWithinLimit(int message, int limit);
+    void sendCallSign(int CLOCK_PIN, int DATA_PIN, int TIME_FRAME);
 }
 #endif

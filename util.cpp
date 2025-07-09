@@ -38,4 +38,14 @@ namespace stUTIL
     {
         return message < limit;
     }
+
+    void sendCallSign(int CLOCK_PIN, int DATA_PIN, int TIME_FRAME)
+    {
+        pinMode(CLOCK_PIN, OUTPUT);
+        pinMode(DATA_PIN, OUTPUT);
+        digitalWrite(CLOCK_PIN, HIGH);
+        delay(5 * TIME_FRAME);
+        digitalWrite(CLOCK_PIN, LOW);
+        delay(TIME_FRAME);
+    }
 }
