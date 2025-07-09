@@ -24,7 +24,7 @@ public:
 
     /* Function prototypes for main class*/
     static void begin(int timeFrame, int CLOCK, int DATA);
-    static void transmit(int message);
+    static bool transmit(int message = 0xFF + 1);
     static int receive();
 
 private:

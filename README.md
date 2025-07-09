@@ -31,10 +31,12 @@ This function must be used in the ``setup()`` section of your code. This should 
 
 ### 2) 📡 .transmit()
 ```cpp
-void stUART::transmit(int message);
+bool stUART::transmit(int message);
 ```
 
 With this method you can transmit any number that can fit in an 8 bit frame (from **0x00 to 0xFF** a.k.a. 0-256 in decimal)- for larger numbers my suggestion is to break it up to digits and transmit in a digit based, or two digit based system - whatever fits your needs. 
+
+This function returns a **boolean** depending on if the transmission procedure is ready to start.
 
 Example file: [📁 arduino_send.ino](/examples/arduino_send.ino)
 

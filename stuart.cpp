@@ -49,6 +49,14 @@ struct DATA_S
 
 DATA_S DATA_FRAME;
 
+/* Transmit fn data */
+struct TRANSMIT_S
+{
+    bool READY = true;
+};
+
+TRANSMIT_S TRANSMIT;
+
 /* EXPORTED STUART FNS */
 void stUART::begin(int timeFrame, int CLOCK, int DATA)
 {
@@ -57,43 +65,54 @@ void stUART::begin(int timeFrame, int CLOCK, int DATA)
     DATA_PIN = DATA;
 }
 
-void stUART::transmit(int message)
+bool stUART::transmit(int message)
 {
-    int encodeBinaryArray[8];
-
-    /** Input data validation and waiting for time to speak */
-    if (CLOCK_PIN > 0 && DATA_PIN > 0 && TIME_FRAME > 0)
-        pinMode(CLOCK_PIN, INPUT);
-    else
-        return;
-
-    while (digitalRead(CLOCK_PIN) == HIGH)
+    if (stUTIL::isMessageWithinLimit(message, _LIMIT_VALUE) && TRANSMIT.READY)
     {
-        delay(TIME_FRAME);
-    }
+        int encodeBinaryArray[8];
 
-    /** Starting transmission */
-    pinMode(CLOCK_PIN, OUTPUT);
-    pinMode(DATA_PIN, OUTPUT);
-    digitalWrite(CLOCK_PIN, HIGH);
-    delay(5 * TIME_FRAME);
-    digitalWrite(CLOCK_PIN, LOW);
-    delay(TIME_FRAME);
+        /** Input data validation and waiting for time to speak */
+        if (CLOCK_PIN > 0 && DATA_PIN > 0 && TIME_FRAME > 0)
+            pinMode(CLOCK_PIN, INPUT);
+        else
+            return;
 
-    /** Transmission encoder */
-    stUTIL::intToBinaryArray(message, encodeBinaryArray);
+        while (digitalRead(CLOCK_PIN) == HIGH)
+        {
+            delay(TIME_FRAME);
+        }
 
-    for (int i = 0; i < 8; ++i)
-    {
+        /** Starting transmission */
+
+        TRANSMIT.READY = false;
+
+        /* Callsign */
+        pinMode(CLOCK_PIN, OUTPUT);
+        pinMode(DATA_PIN, OUTPUT);
         digitalWrite(CLOCK_PIN, HIGH);
-        digitalWrite(DATA_PIN, encodeBinaryArray[i]);
-        delay(TIME_FRAME);
+        delay(5 * TIME_FRAME);
         digitalWrite(CLOCK_PIN, LOW);
-        digitalWrite(DATA_PIN, LOW);
         delay(TIME_FRAME);
+
+        /** Transmission encoder */
+        stUTIL::intToBinaryArray(message, encodeBinaryArray);
+
+        for (int i = 0; i < 8; ++i)
+        {
+            digitalWrite(CLOCK_PIN, HIGH);
+            digitalWrite(DATA_PIN, encodeBinaryArray[i]);
+            delay(TIME_FRAME);
+            digitalWrite(CLOCK_PIN, LOW);
+            digitalWrite(DATA_PIN, LOW);
+            delay(TIME_FRAME);
+        }
+
+        /* Finishing */
+        delay(TIME_FRAME);
+        TRANSMIT.READY = true;
     }
 
-    delay(TIME_FRAME);
+    return TRANSMIT.READY;
 }
 
 int stUART::receive()

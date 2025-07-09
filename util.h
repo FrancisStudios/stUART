@@ -16,5 +16,6 @@ namespace stUTIL
     void intToBinaryArray(int number, int binaryArray[8]);
     void setInputPins(int CLOCK_PIN, int DATA_PIN);
     int binaryArrayToInt(int binaryArray[8]);
+    bool isMessageWithinLimit(int message, int limit);
 }
 #endif

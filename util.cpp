@@ -33,4 +33,9 @@ namespace stUTIL
         pinMode(CLOCK_PIN, INPUT);
         pinMode(DATA_PIN, INPUT);
     }
+
+    bool isMessageWithinLimit(int message, int limit)
+    {
+        return message < limit;
+    }
 }
