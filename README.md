@@ -2,6 +2,10 @@
 
 `by Francis Studios`
 
+Current version is `v1.0` 🟢
+
+Release date : `2025.07` 📅 
+
 ## ❓ What is stUART? 
 
 Stuart is an i2c communication protocol, that uses 2 wires to interface between two circuits (**CLK** and **DATA**) and send 8 bit frames (similarly to UART) but this is a simplistic _"very stupid"_ method for simple embedded applications. 
