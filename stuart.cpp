@@ -12,7 +12,9 @@ int stUART::TIME_FRAME = 0;
 int stUART::CLOCK_PIN = 0;
 int stUART::DATA_PIN = 0;
 
-bool TEST_ENVIRONMENT = true;
+int _LIMIT_VALUE = 0xFF + 1; // THE LARGEST ENCODABLE NUMBER IN 8 bits IS 0xFF (255)
+
+bool TEST_ENVIRONMENT = false;
 
 struct CLOCK_STATE_S
 {
@@ -96,6 +98,7 @@ void stUART::transmit(int message)
 
 int stUART::receive()
 {
+    int _RETURN = _LIMIT_VALUE;
     stUTIL::setInputPins(stUART::CLOCK_PIN, stUART::DATA_PIN);
 
     /* Main receive loop stage */
@@ -108,6 +111,15 @@ int stUART::receive()
         dataBitsCounter();
 
     CLOCK_STATE.PREVIOUS = CLOCK_STATE.CURRENT;
+
+    /* Data Frame Is Finished | Ready to Serve */
+    if (DATA_FRAME.DONE)
+    {
+        DATA_FRAME.DONE = false;
+        _RETURN = stUTIL::binaryArrayToInt(DATA_FRAME.STORE);
+    }
+
+    return _RETURN;
 }
 
 long stUART::clockPulseTimer()
@@ -150,7 +162,6 @@ void stUART::dataBitsCounter()
 
     if (isRisingEdgeClock())
     {
-        DATA_FRAME.DONE = false;
         int DATA_BIT = digitalRead(DATA_PIN);
         DATA_FRAME.STORE[DATA_FRAME.COUNTER] = DATA_BIT;
         DATA_FRAME.COUNTER++;
